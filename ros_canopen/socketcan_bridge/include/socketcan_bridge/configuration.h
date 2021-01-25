@@ -38,7 +38,7 @@ namespace socketcan_bridge
       private:
 
          ros::NodeHandle n_; 
-         ros::Publisher pub_;
+         ros::Publisher pub2_;
          ros::Subscriber sub_;
 
    };//End of class

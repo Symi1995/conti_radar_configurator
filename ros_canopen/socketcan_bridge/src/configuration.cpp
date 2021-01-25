@@ -22,6 +22,7 @@ namespace socketcan_bridge
 
       void ConfigurationNode::callback(const can_msgs::Frame & input)
       {
+         ROS_INFO("ConfigurationNode");
          can_msgs::Frame output;
          //.... do something with the input and generate the output...
 
@@ -367,7 +368,7 @@ namespace socketcan_bridge
    FilterConfigurationNode::FilterConfigurationNode()
       {
          //Topic you want to publish
-         pub_ = n_.advertise<can_msgs::Frame>("/sent_messages", 1);
+         pub2_ = n_.advertise<can_msgs::Frame>("/sent_messages", 1);
 
         //Topic you want to subscribe
          sub_ = n_.subscribe("/received_messages", 1, &FilterConfigurationNode::callback, this);
@@ -375,7 +376,9 @@ namespace socketcan_bridge
 
       void FilterConfigurationNode::callback(const can_msgs::Frame & input)
       {
+         ROS_INFO("FilterConfigurationNode");
          can_msgs::Frame output;
+
          //.... do something with the input and generate the output...
 
          output.header.stamp = ros::Time::now();
@@ -610,8 +613,8 @@ namespace socketcan_bridge
          output.data[2]= b3.byte;
          output.data[3]= b4.byte;
          output.data[4]= b5.byte;
-
-         pub_.publish(output);
+         ROS_INFO_STREAM(output);
+         pub2_.publish(output);
       }
 
       bool FilterConfigurationNode::is_integer(float dec)
@@ -680,7 +683,7 @@ namespace socketcan_bridge
 
          output.data[0]= b1.byte;
          output.data[1]= b2.byte;
-
+         
          pub_.publish(output);
       }
 

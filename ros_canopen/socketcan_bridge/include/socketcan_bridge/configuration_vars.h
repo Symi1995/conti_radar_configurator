@@ -16,7 +16,7 @@ const int RADARCFG_STOREINNVM_VALID = 1; // Allow storing to non-volatile memory
 
 const int RADARCFG_MAXDISTANCE = 250; // Maximum distance of far scan. Standard range: 96-260
 const int RADARCFG_SENSORID = 0; // Sensor Id 0-7
-const int RADARCFG_OUTPUTTYPE = 2; // Output type 0 none - 1 objects - 2 clusters
+const int RADARCFG_OUTPUTTYPE = 1; // Output type 0 none - 1 objects - 2 clusters
 const int RADARCFG_RADARPOWER = 3; // Transmitted radar power 0 Standard - 3 -9dB Tx gain
 
 const int RADARCFG_CTRLRELAY_VALID = 0; // Allow change of relay control output
@@ -27,17 +27,17 @@ const int RADARCFG_SORTINDEX = 1; // Sorting index 0 no sorting - 1 sort by rang
 const int RADARCFG_STOREINNVM = 1; // Store the current configuration to non-volatile memory
 
 const int RADARCFG_RCS_THRESHOLD_VALID = 1; // Allow change of RCS threshold option
-const int RADARCFG_RCS_THRESHOLD = 1; // Set the sensibility of cluster detection 0 standard - 1 high sensibility
+const int RADARCFG_RCS_THRESHOLD = 0; // Set the sensibility of cluster detection 0 standard - 1 high sensibility
 
 // Cluster and Object Filter Configuration 0x202
 
 const int FILTERCFG_VALID = 1; // Allow change of filter configuration
 const int FILTERCFG_ACTIVE = 1; // Activate filter configuration
-const int FILTERCFG_INDEX = 5; // Multiplexor to specify which filter criterion to configure
-const int FILTERCFG_TYPE = 0; // Choose between objects and clusters 0 cluster - 1 object
+const int FILTERCFG_INDEX = 0; // Multiplexor to specify which filter criterion to configure
+const int FILTERCFG_TYPE = 1; // Choose between objects and clusters 0 cluster - 1 object
 // Index 0. Clusters and objects
 const double FILTERCFG_MIN_NOFOBJ = 0; // Number of clusters or objects 0 - 4095
-const double FILTERCFG_MAX_NOFOBJ = 50;
+const double FILTERCFG_MAX_NOFOBJ = 3;
 const double FILTERCFG_RES_NOFOBJ = 1;
 // Index 1. Clusters and objects
 const double FILTERCFG_MIN_DISTANCE = 0; // Radial distance 0 - 409.5 m 
@@ -70,7 +70,7 @@ const double FILTERCFG_MIN_SIZE = 0; // Area object size 0 - 102.375 m2
 const double FILTERCFG_MAX_SIZE = 102.375;
 const double FILTERCFG_RES_SIZE = 0.025;
 // Index 8. Objects
-const double FILTERCFG_MIN_PROBEXISTS = 3; // Probability of existence
+const double FILTERCFG_MIN_PROBEXISTS = 5; // Probability of existence
 const double FILTERCFG_MAX_PROBEXISTS = 7; //  0 0% - 1 25 % - 2 50 % - 3 75 % - 4 90 % - 5 99 % - 6 99.9 % - 7 100 %
 const double FILTERCFG_RES_PROBEXISTS = 1;
 // Index 9. Objects
