@@ -33,7 +33,7 @@ namespace socketcan_bridge
          Byte b1, b2, b3, b4, b5, b6, b7, b8;
          int bits1[8], bits2[8], bits3[8], bits4[8], bits5[8], bits6[8], bits7[8], bits8[8];
          int i = 1;
-
+         
          b1.bit1 = RADARCFG_MAXDISTANCE_VALID;
          b1.bit2 = RADARCFG_SENSORID_VALID;
          b1.bit3 = RADARCFG_RADARPOWER_VALID;
@@ -357,6 +357,8 @@ namespace socketcan_bridge
          output.data[6]= b7.byte;
          output.data[7]= b8.byte;
 
+         ROS_INFO_STREAM(output);
+
          pub_.publish(output);
       }
 
@@ -390,231 +392,498 @@ namespace socketcan_bridge
 
          b1.bit1 = 0;
          b1.bit2 = FILTERCFG_VALID;
-         b1.bit3 = FILTERCFG_ACTIVE;
 
-         int i = 4;
-         double filtercfg_index = FILTERCFG_INDEX;
-         double filtercfg_type = FILTERCFG_TYPE;
-
-         while (i <= 7)
+         if (FILTERCFG_INDEX == -1)
          {
-            filtercfg_index /= 2;
+            for (int filterIdx = 0; filterIdx <= 15; filterIdx++)
+            {
+               int i = 4;
+               double filtercfg_index = filterIdx;
+               double filtercfg_type = FILTERCFG_TYPE;
 
-            if (FilterConfigurationNode::is_integer(filtercfg_index) == 0)
-            {
-               filtercfg_index -= 0.5;
-               bits1[i] = 1;
-               i++;
-            }
-            else
-            {
-               bits1[i] = 0;
-               i++;
+               while (i <= 7)
+               {
+                  filtercfg_index /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_index) == 0)
+                  {
+                     filtercfg_index -= 0.5;
+                     bits1[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits1[i] = 0;
+                     i++;
+                  }
+               }
+
+               while (i <= 8)
+               {
+                  filtercfg_type /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_type) == 0)
+                  {
+                     filtercfg_type -= 0.5;
+                     bits1[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits1[i] = 0;
+                     i++;
+                  }
+               }
+
+               b1.bit4 = bits1[4];
+               b1.bit5 = bits1[5];
+               b1.bit6 = bits1[6];
+               b1.bit7 = bits1[7];
+               b1.bit8 = bits1[8];
+
+               int filtercfgActive = 0;
+               double filtercfg_min, filtercfg_max, filtercfg_res;
+               switch (filterIdx){
+               case 0:
+                  filtercfgActive = FILTERCFG_ACTIVE_NOFOBJ;
+                  filtercfg_min = FILTERCFG_MIN_NOFOBJ / FILTERCFG_RES_NOFOBJ;
+                  filtercfg_max = FILTERCFG_MAX_NOFOBJ / FILTERCFG_RES_NOFOBJ;
+                  break;
+               case 1:
+                  filtercfgActive = FILTERCFG_ACTIVE_DISTANCE;
+                  filtercfg_min = FILTERCFG_MIN_DISTANCE / FILTERCFG_RES_DISTANCE;
+                  filtercfg_max = FILTERCFG_MAX_DISTANCE / FILTERCFG_RES_DISTANCE;
+                  break;
+               case 2:
+                  filtercfgActive = FILTERCFG_ACTIVE_AZIMUTH;
+                  filtercfg_min = (FILTERCFG_MIN_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
+                  filtercfg_max = (FILTERCFG_MAX_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
+                  break;
+               case 3:
+                  filtercfgActive = FILTERCFG_ACTIVE_VRELONCOME;
+                  filtercfg_min = FILTERCFG_MIN_VRELONCOME / FILTERCFG_RES_VRELONCOME;
+                  filtercfg_max = FILTERCFG_MAX_VRELONCOME / FILTERCFG_RES_VRELONCOME;
+                  break;
+               case 4:
+                  filtercfgActive = FILTERCFG_ACTIVE_VRELDEPART;
+                  filtercfg_min = FILTERCFG_MIN_VRELDEPART / FILTERCFG_RES_VRELDEPART;
+                  filtercfg_max = FILTERCFG_MAX_VRELDEPART / FILTERCFG_RES_VRELDEPART;
+                  break;
+               case 5:
+                  filtercfgActive = FILTERCFG_ACTIVE_RCS;
+                  filtercfg_min = (FILTERCFG_MIN_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
+                  filtercfg_max = (FILTERCFG_MAX_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
+                  break; 
+               case 6:
+                  filtercfgActive = FILTERCFG_ACTIVE_LIFETIME;
+                  filtercfg_min = FILTERCFG_MIN_LIFETIME / FILTERCFG_RES_LIFETIME;
+                  filtercfg_max = FILTERCFG_MAX_LIFETIME / FILTERCFG_RES_LIFETIME;
+                  break;
+               case 7:
+                  filtercfgActive = FILTERCFG_ACTIVE_SIZE;
+                  filtercfg_min = FILTERCFG_MIN_SIZE / FILTERCFG_RES_SIZE;
+                  filtercfg_max = FILTERCFG_MAX_SIZE / FILTERCFG_RES_SIZE;
+                  break;
+               case 8:
+                  filtercfgActive = FILTERCFG_ACTIVE_PROBEXISTS;
+                  filtercfg_min = FILTERCFG_MIN_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
+                  filtercfg_max = FILTERCFG_MAX_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
+                  break;
+               case 9:
+                  filtercfgActive = FILTERCFG_ACTIVE_Y;
+                  filtercfg_min = (FILTERCFG_MIN_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
+                  filtercfg_max = (FILTERCFG_MAX_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
+                  break;
+               case 10:
+                  filtercfgActive = FILTERCFG_ACTIVE_X;
+                  filtercfg_min = (FILTERCFG_MIN_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
+                  filtercfg_max = (FILTERCFG_MAX_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
+                  break;
+               case 11:
+                  filtercfgActive = FILTERCFG_ACTIVE_VYRIGHTLEFT;
+                  filtercfg_min = FILTERCFG_MIN_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
+                  filtercfg_max = FILTERCFG_MAX_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
+                  break;         
+               case 12:
+                  filtercfgActive = FILTERCFG_ACTIVE_VXONCOME;
+                  filtercfg_min = FILTERCFG_MIN_VXONCOME / FILTERCFG_RES_VXONCOME;
+                  filtercfg_max = FILTERCFG_MAX_VXONCOME / FILTERCFG_RES_VXONCOME;
+                  break;
+               case 13:
+                  filtercfgActive = FILTERCFG_ACTIVE_VYLEFTRIGHT;
+                  filtercfg_min = FILTERCFG_MIN_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
+                  filtercfg_max = FILTERCFG_MAX_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
+                  break;
+               case 14:
+                  filtercfgActive = FILTERCFG_ACTIVE_VXDEPART;
+                  filtercfg_min = FILTERCFG_MIN_VXDEPART / FILTERCFG_RES_VXDEPART;
+                  filtercfg_max = FILTERCFG_MAX_VXDEPART / FILTERCFG_RES_VXDEPART;
+                  break;
+               case 15:
+                  filtercfgActive = FILTERCFG_ACTIVE_OBJECT_CLASS;
+                  filtercfg_min = FILTERCFG_MIN_OBJECT_CLASS / FILTERCFG_RES_OBJECT_CLASS;
+                  filtercfg_max = FILTERCFG_MAX_OBJECT_CLASS / FILTERCFG_RES_OBJECT_CLASS;
+                  break;
+               }
+
+               filtercfg_min = std::floor(filtercfg_min);
+               filtercfg_max = std::floor(filtercfg_max);
+
+               b1.bit3 = filtercfgActive;
+
+               i = 1;
+               while (i <= 8)
+               {
+                  filtercfg_min /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
+                  {
+                     filtercfg_min -= 0.5;
+                     bits3[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits3[i] = 0;
+                     i++;
+                  }
+               }
+
+               i = 1;
+               while (i <= 5)
+               {
+                  filtercfg_min /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
+                  {
+                     filtercfg_min -= 0.5;
+                     bits2[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits2[i] = 0;
+                     i++;
+                  }
+               }
+
+               b2.bit1 = bits2[1];
+               b2.bit2 = bits2[2];
+               b2.bit3 = bits2[3];
+               b2.bit4 = bits2[4];
+               b2.bit5 = bits2[5];
+               b2.bit6 = 0;
+               b2.bit7 = 0;
+               b2.bit8 = 0;
+
+               b3.bit1 = bits3[1];
+               b3.bit2 = bits3[2];
+               b3.bit3 = bits3[3];
+               b3.bit4 = bits3[4];
+               b3.bit5 = bits3[5];
+               b3.bit6 = bits3[6];
+               b3.bit7 = bits3[7];
+               b3.bit8 = bits3[8];
+
+               i = 1;
+               while (i <= 8)
+               {
+                  filtercfg_max /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
+                  {
+                     filtercfg_max -= 0.5;
+                     bits5[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits5[i] = 0;
+                     i++;
+                  }
+               }
+
+               i=1;
+               while (i <= 5)
+               {
+                  filtercfg_max /= 2;
+
+                  if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
+                  {
+                     filtercfg_max -= 0.5;
+                     bits4[i] = 1;
+                     i++;
+                  }
+                  else
+                  {
+                     bits4[i] = 0;
+                     i++;
+                  }
+               }
+
+               b4.bit1 = bits4[1];
+               b4.bit2 = bits4[2];
+               b4.bit3 = bits4[3];
+               b4.bit4 = bits4[4];
+               b4.bit5 = bits4[5];
+               b4.bit6 = 0;
+               b4.bit7 = 0;
+               b4.bit8 = 0;
+
+               b5.bit1 = bits5[1];
+               b5.bit2 = bits5[2];
+               b5.bit3 = bits5[3];
+               b5.bit4 = bits5[4];
+               b5.bit5 = bits5[5];
+               b5.bit6 = bits5[6];
+               b5.bit7 = bits5[7];
+               b5.bit8 = bits5[8];
+
+               output.data[0]= b1.byte;
+               output.data[1]= b2.byte;
+               output.data[2]= b3.byte;
+               output.data[3]= b4.byte;
+               output.data[4]= b5.byte;
+               
+               ROS_INFO_STREAM(output);
+               pub2_.publish(output);
+               sleep(1.5);
             }
          }
-
-         while (i <= 8)
+         else
          {
-            filtercfg_type /= 2;
+            int i = 4;
+            double filtercfg_index = FILTERCFG_INDEX;
+            double filtercfg_type = FILTERCFG_TYPE;
 
-            if (FilterConfigurationNode::is_integer(filtercfg_type) == 0)
+            while (i <= 7)
             {
-               filtercfg_type -= 0.5;
-               bits1[i] = 1;
-               i++;
+               filtercfg_index /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_index) == 0)
+               {
+                  filtercfg_index -= 0.5;
+                  bits1[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits1[i] = 0;
+                  i++;
+               }
             }
-            else
+
+            while (i <= 8)
             {
-               bits1[i] = 0;
-               i++;
+               filtercfg_type /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_type) == 0)
+               {
+                  filtercfg_type -= 0.5;
+                  bits1[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits1[i] = 0;
+                  i++;
+               }
             }
+
+            b1.bit3 = FILTERCFG_ACTIVE;
+            b1.bit4 = bits1[4];
+            b1.bit5 = bits1[5];
+            b1.bit6 = bits1[6];
+            b1.bit7 = bits1[7];
+            b1.bit8 = bits1[8];
+
+            double filtercfg_min, filtercfg_max, filtercfg_res;
+            switch (FILTERCFG_INDEX){
+            case 0:
+               filtercfg_min = FILTERCFG_MIN_NOFOBJ / FILTERCFG_RES_NOFOBJ;
+               filtercfg_max = FILTERCFG_MAX_NOFOBJ / FILTERCFG_RES_NOFOBJ;
+               break;
+            case 1:
+               filtercfg_min = FILTERCFG_MIN_DISTANCE / FILTERCFG_RES_DISTANCE;
+               filtercfg_max = FILTERCFG_MAX_DISTANCE / FILTERCFG_RES_DISTANCE;
+               break;
+            case 2:
+               filtercfg_min = (FILTERCFG_MIN_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
+               filtercfg_max = (FILTERCFG_MAX_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
+               break;
+            case 3:
+               filtercfg_min = FILTERCFG_MIN_VRELONCOME / FILTERCFG_RES_VRELONCOME;
+               filtercfg_max = FILTERCFG_MAX_VRELONCOME / FILTERCFG_RES_VRELONCOME;
+               break;
+            case 4:
+               filtercfg_min = FILTERCFG_MIN_VRELDEPART / FILTERCFG_RES_VRELDEPART;
+               filtercfg_max = FILTERCFG_MAX_VRELDEPART / FILTERCFG_RES_VRELDEPART;
+               break;
+            case 5:
+               filtercfg_min = (FILTERCFG_MIN_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
+               filtercfg_max = (FILTERCFG_MAX_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
+               break; 
+            case 6:
+               filtercfg_min = FILTERCFG_MIN_LIFETIME / FILTERCFG_RES_LIFETIME;
+               filtercfg_max = FILTERCFG_MAX_LIFETIME / FILTERCFG_RES_LIFETIME;
+               break;
+            case 7:
+               filtercfg_min = FILTERCFG_MIN_SIZE / FILTERCFG_RES_SIZE;
+               filtercfg_max = FILTERCFG_MAX_SIZE / FILTERCFG_RES_SIZE;
+               break;
+            case 8:
+               filtercfg_min = FILTERCFG_MIN_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
+               filtercfg_max = FILTERCFG_MAX_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
+               break;
+            case 9:
+               filtercfg_min = (FILTERCFG_MIN_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
+               filtercfg_max = (FILTERCFG_MAX_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
+               break;
+            case 10:
+               filtercfg_min = (FILTERCFG_MIN_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
+               filtercfg_max = (FILTERCFG_MAX_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
+               break;
+            case 11:
+               filtercfg_min = FILTERCFG_MIN_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
+               filtercfg_max = FILTERCFG_MAX_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
+               break;         
+            case 12:
+               filtercfg_min = FILTERCFG_MIN_VXONCOME / FILTERCFG_RES_VXONCOME;
+               filtercfg_max = FILTERCFG_MAX_VXONCOME / FILTERCFG_RES_VXONCOME;
+               break;
+            case 13:
+               filtercfg_min = FILTERCFG_MIN_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
+               filtercfg_max = FILTERCFG_MAX_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
+               break;
+            case 14:
+               filtercfg_min = FILTERCFG_MIN_VXDEPART / FILTERCFG_RES_VXDEPART;
+               filtercfg_max = FILTERCFG_MAX_VXDEPART / FILTERCFG_RES_VXDEPART;
+               break;
+            case 15:
+               filtercfg_min = FILTERCFG_MIN_OBJECT_CLASS / FILTERCFG_RES_OBJECT_CLASS;
+               filtercfg_max = FILTERCFG_MAX_OBJECT_CLASS / FILTERCFG_RES_OBJECT_CLASS;
+               break;  
+            }
+
+            filtercfg_min = std::floor(filtercfg_min);
+            filtercfg_max = std::floor(filtercfg_max);
+
+            i = 1;
+            while (i <= 8)
+            {
+               filtercfg_min /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
+               {
+                  filtercfg_min -= 0.5;
+                  bits3[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits3[i] = 0;
+                  i++;
+               }
+            }
+
+            i = 1;
+            while (i <= 5)
+            {
+               filtercfg_min /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
+               {
+                  filtercfg_min -= 0.5;
+                  bits2[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits2[i] = 0;
+                  i++;
+               }
+            }
+
+            b2.bit1 = bits2[1];
+            b2.bit2 = bits2[2];
+            b2.bit3 = bits2[3];
+            b2.bit4 = bits2[4];
+            b2.bit5 = bits2[5];
+            b2.bit6 = 0;
+            b2.bit7 = 0;
+            b2.bit8 = 0;
+
+            b3.bit1 = bits3[1];
+            b3.bit2 = bits3[2];
+            b3.bit3 = bits3[3];
+            b3.bit4 = bits3[4];
+            b3.bit5 = bits3[5];
+            b3.bit6 = bits3[6];
+            b3.bit7 = bits3[7];
+            b3.bit8 = bits3[8];
+            
+            i = 1;
+            while (i <= 8)
+            {
+               filtercfg_max /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
+               {
+                  filtercfg_max -= 0.5;
+                  bits5[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits5[i] = 0;
+                  i++;
+               }
+            }
+
+            i=1;
+            while (i <= 5)
+            {
+               filtercfg_max /= 2;
+
+               if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
+               {
+                  filtercfg_max -= 0.5;
+                  bits4[i] = 1;
+                  i++;
+               }
+               else
+               {
+                  bits4[i] = 0;
+                  i++;
+               }
+            }
+
+            b4.bit1 = bits4[1];
+            b4.bit2 = bits4[2];
+            b4.bit3 = bits4[3];
+            b4.bit4 = bits4[4];
+            b4.bit5 = bits4[5];
+            b4.bit6 = 0;
+            b4.bit7 = 0;
+            b4.bit8 = 0;
+
+            b5.bit1 = bits5[1];
+            b5.bit2 = bits5[2];
+            b5.bit3 = bits5[3];
+            b5.bit4 = bits5[4];
+            b5.bit5 = bits5[5];
+            b5.bit6 = bits5[6];
+            b5.bit7 = bits5[7];
+            b5.bit8 = bits5[8];
+
+            output.data[0]= b1.byte;
+            output.data[1]= b2.byte;
+            output.data[2]= b3.byte;
+            output.data[3]= b4.byte;
+            output.data[4]= b5.byte;
+            ROS_INFO_STREAM(output);
+            pub2_.publish(output);
          }
-
-         b1.bit4 = bits1[4];
-         b1.bit5 = bits1[5];
-         b1.bit6 = bits1[6];
-         b1.bit7 = bits1[7];
-         b1.bit8 = bits1[8];
-
-         double filtercfg_min, filtercfg_max, filtercfg_res;
-         switch (FILTERCFG_INDEX){
-         case 0:
-            filtercfg_min = FILTERCFG_MIN_NOFOBJ / FILTERCFG_RES_NOFOBJ;
-            filtercfg_max = FILTERCFG_MAX_NOFOBJ / FILTERCFG_RES_NOFOBJ;
-            break;
-         case 1:
-            filtercfg_min = FILTERCFG_MIN_DISTANCE / FILTERCFG_RES_DISTANCE;
-            filtercfg_max = FILTERCFG_MAX_DISTANCE / FILTERCFG_RES_DISTANCE;
-            break;
-         case 2:
-            filtercfg_min = (FILTERCFG_MIN_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
-            filtercfg_max = (FILTERCFG_MAX_AZIMUTH - FILTERCFG_MINIMUM_AZIMUTH) / FILTERCFG_RES_AZIMUTH;
-            break;
-         case 3:
-            filtercfg_min = FILTERCFG_MIN_VRELONCOME / FILTERCFG_RES_VRELONCOME;
-            filtercfg_max = FILTERCFG_MAX_VRELONCOME / FILTERCFG_RES_VRELONCOME;
-            break;
-         case 4:
-            filtercfg_min = FILTERCFG_MIN_VRELDEPART / FILTERCFG_RES_VRELDEPART;
-            filtercfg_max = FILTERCFG_MAX_VRELDEPART / FILTERCFG_RES_VRELDEPART;
-            break;
-         case 5:
-            filtercfg_min = (FILTERCFG_MIN_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
-            filtercfg_max = (FILTERCFG_MAX_RCS - FILTERCFG_MINIMUM_RCS) / FILTERCFG_RES_RCS;
-            break; 
-         case 6:
-            filtercfg_min = FILTERCFG_MIN_LIFETIME / FILTERCFG_RES_LIFETIME;
-            filtercfg_max = FILTERCFG_MAX_LIFETIME / FILTERCFG_RES_LIFETIME;
-            break;
-         case 7:
-            filtercfg_min = FILTERCFG_MIN_SIZE / FILTERCFG_RES_SIZE;
-            filtercfg_max = FILTERCFG_MAX_SIZE / FILTERCFG_RES_SIZE;
-            break;
-         case 8:
-            filtercfg_min = FILTERCFG_MIN_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
-            filtercfg_max = FILTERCFG_MAX_PROBEXISTS / FILTERCFG_RES_PROBEXISTS;
-            break;
-         case 9:
-            filtercfg_min = (FILTERCFG_MIN_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
-            filtercfg_max = (FILTERCFG_MAX_Y - FILTERCFG_MINIMUM_Y) / FILTERCFG_RES_Y;
-            break;
-         case 10:
-            filtercfg_min = (FILTERCFG_MIN_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
-            filtercfg_max = (FILTERCFG_MAX_X - FILTERCFG_MINIMUM_X) / FILTERCFG_RES_X;
-            break;
-         case 11:
-            filtercfg_min = FILTERCFG_MIN_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
-            filtercfg_max = FILTERCFG_MAX_VYRIGHTLEFT / FILTERCFG_RES_VYRIGHTLEFT;
-            break;         
-         case 12:
-            filtercfg_min = FILTERCFG_MIN_VXONCOME / FILTERCFG_RES_VXONCOME;
-            filtercfg_max = FILTERCFG_MAX_VXONCOME / FILTERCFG_RES_VXONCOME;
-            break;
-         case 13:
-            filtercfg_min = FILTERCFG_MIN_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
-            filtercfg_max = FILTERCFG_MAX_VYLEFTRIGHT / FILTERCFG_RES_VYLEFTRIGHT;
-            break;
-         case 14:
-            filtercfg_min = FILTERCFG_MIN_VXDEPART / FILTERCFG_RES_VXDEPART;
-            filtercfg_max = FILTERCFG_MAX_VXDEPART / FILTERCFG_RES_VXDEPART;
-            break;            
-         }
-
-         i = 1;
-         while (i <= 8)
-         {
-            filtercfg_min /= 2;
-
-            if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
-            {
-               filtercfg_min -= 0.5;
-               bits3[i] = 1;
-               i++;
-            }
-            else
-            {
-               bits3[i] = 0;
-               i++;
-            }
-         }
-
-         i = 1;
-         while (i <= 5)
-         {
-            filtercfg_min /= 2;
-
-            if (FilterConfigurationNode::is_integer(filtercfg_min) == 0)
-            {
-               filtercfg_min -= 0.5;
-               bits2[i] = 1;
-               i++;
-            }
-            else
-            {
-               bits2[i] = 0;
-               i++;
-            }
-         }
-
-         b2.bit1 = bits2[1];
-         b2.bit2 = bits2[2];
-         b2.bit3 = bits2[3];
-         b2.bit4 = bits2[4];
-         b2.bit5 = bits2[5];
-         b2.bit6 = 0;
-         b2.bit7 = 0;
-         b2.bit8 = 0;
-
-         b3.bit1 = bits3[1];
-         b3.bit2 = bits3[2];
-         b3.bit3 = bits3[3];
-         b3.bit4 = bits3[4];
-         b3.bit5 = bits3[5];
-         b3.bit6 = bits3[6];
-         b3.bit7 = bits3[7];
-         b3.bit8 = bits3[8];
-
-         i = 1;
-         while (i <= 8)
-         {
-            filtercfg_max /= 2;
-
-            if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
-            {
-               filtercfg_max -= 0.5;
-               bits5[i] = 1;
-               i++;
-            }
-            else
-            {
-               bits5[i] = 0;
-               i++;
-            }
-         }
-
-         i=1;
-         while (i <= 5)
-         {
-            filtercfg_max /= 2;
-
-            if (FilterConfigurationNode::is_integer(filtercfg_max) == 0)
-            {
-               filtercfg_max -= 0.5;
-               bits4[i] = 1;
-               i++;
-            }
-            else
-            {
-               bits4[i] = 0;
-               i++;
-            }
-         }
-
-         b4.bit1 = bits4[1];
-         b4.bit2 = bits4[2];
-         b4.bit3 = bits4[3];
-         b4.bit4 = bits4[4];
-         b4.bit5 = bits4[5];
-         b4.bit6 = 0;
-         b4.bit7 = 0;
-         b4.bit8 = 0;
-
-         b5.bit1 = bits5[1];
-         b5.bit2 = bits5[2];
-         b5.bit3 = bits5[3];
-         b5.bit4 = bits5[4];
-         b5.bit5 = bits5[5];
-         b5.bit6 = bits5[6];
-         b5.bit7 = bits5[7];
-         b5.bit8 = bits5[8];
-
-         output.data[0]= b1.byte;
-         output.data[1]= b2.byte;
-         output.data[2]= b3.byte;
-         output.data[3]= b4.byte;
-         output.data[4]= b5.byte;
-         ROS_INFO_STREAM(output);
-         pub2_.publish(output);
       }
 
       bool FilterConfigurationNode::is_integer(float dec)
